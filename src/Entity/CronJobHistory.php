@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Norvutec\CronManagerBundle\Model\CronJobStatus;
 use Norvutec\CronManagerBundle\Repository\CronJobHistoryRepository;
 
-#[ORM\Table()]
+#[ORM\Table(name: 'cronjob_history')]
 #[ORM\Entity(repositoryClass: CronJobHistoryRepository::class)]
 class CronJobHistory {
 
@@ -14,6 +14,9 @@ class CronJobHistory {
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $tag = null;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -45,6 +48,17 @@ class CronJobHistory {
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getTag(): ?string
+    {
+        return $this->tag;
+    }
+
+    public function setTag(?string $tag): self
+    {
+        $this->tag = $tag;
+        return $this;
     }
 
     public function getName(): ?string

@@ -43,16 +43,16 @@ class CronJobHistoryRepository extends ServiceEntityRepository
 
     /**
      * Gets the last completed history of the cron job
-     * @param string $name Name of the cron job
+     * @param string $tag Tag of the Cronjob
      * @return CronJobHistory|null Last completed history of the cron job
      */
-    public function getLastCompleted(string $name): ?CronJobHistory {
+    public function getLastCompleted(string $tag): ?CronJobHistory {
         $qb = $this->createQueryBuilder('c');
-        $qb->where('c.name = :name')
+        $qb->where('c.tag = :tag')
             ->andWhere($qb->expr()->isNotNull('c.exitAt'))
             ->orderBy('c.exitAt', 'DESC')
             ->setParameters([
-                'name' => $name,
+                'tag' => $tag,
             ])
             ->setMaxResults(1);
         return $qb->getQuery()->getOneOrNullResult();
@@ -61,15 +61,15 @@ class CronJobHistoryRepository extends ServiceEntityRepository
     /**
      * Gets the current running history of the cron job
      * Returns null if its not running
-     * @param string $name Name of the cron job
+     * @param string $tag Tag of the cron job
      * @return CronJobHistory|null The current running history
      */
-    public function getCurrentRunning(string $name): ?CronJobHistory {
+    public function getCurrentRunning(string $tag): ?CronJobHistory {
         $qb = $this->createQueryBuilder('c');
-        $qb->where('c.name = :name')
+        $qb->where('c.tag = :tag')
             ->andWhere($qb->expr()->isNull('c.exitAt'))
             ->setParameters([
-                'name' => $name,
+                'tag' => $tag,
             ])
             ->setMaxResults(1);
         return $qb->getQuery()->getOneOrNullResult();
@@ -77,16 +77,16 @@ class CronJobHistoryRepository extends ServiceEntityRepository
 
     /**
      * Gets the last failed cronjob execution of this job
-     * @param string $name Name of the cron job
+     * @param string $tag Tag of the cron job
      * @return CronJobHistory|null last failed execution
      */
-    public function getLastFailed(string $name): ?CronJobHistory {
+    public function getLastFailed(string $tag): ?CronJobHistory {
         $qb = $this->createQueryBuilder('c');
-        $qb->where('c.name = :name')
+        $qb->where('c.tag = :tag')
             ->andWhere($qb->expr()->eq('c.status', ':status'))
             ->orderBy('c.exitAt', 'DESC')
             ->setParameters([
-                'name' => $name,
+                'tag' => $tag,
                 'status' => CronJobStatus::FAILED
             ])
             ->setMaxResults(1);
@@ -95,16 +95,16 @@ class CronJobHistoryRepository extends ServiceEntityRepository
 
     /**
      * Gets the last successful cronjob execution of this job
-     * @param string $name Name of the cron job
+     * @param string $tag Tag of the cron job
      * @return CronJobHistory|null last successful execution
      */
-    public function getLastSuccessful(string $name): ?CronJobHistory {
+    public function getLastSuccessful(string $tag): ?CronJobHistory {
         $qb = $this->createQueryBuilder('c');
-        $qb->where('c.name = :name')
+        $qb->where('c.name = :tag')
             ->andWhere($qb->expr()->eq('c.status', ':status'))
             ->orderBy('c.exitAt', 'DESC')
             ->setParameters([
-                'name' => $name,
+                'tag' => $tag,
                 'status' => CronJobStatus::SUCCESS
             ])
             ->setMaxResults(1);

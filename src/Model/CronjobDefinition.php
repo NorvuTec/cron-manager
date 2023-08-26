@@ -15,6 +15,10 @@ class CronjobDefinition {
 
     }
 
+    public function getTag(): string {
+        return $this->cronjob->getTag();
+    }
+
     public function getName(): string {
         return $this->cronjob->getName();
     }
