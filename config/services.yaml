@@ -6,4 +6,9 @@ services:
     autowire: true
     autoconfigure: true
 
-  NorvuTec\CronManagerBundle\Controller\CronManagementController: ~
+  Norvutec\CronManagerBundle\Controller\CronManagementController: ~
+  Norvutec\CronManagerBundle\Service\CronManagerService: ~
+  Norvutec\CronManagerBundle\Command\:
+    resource: '../src/Command'
+    autowire: true
+    tags: [ console.command ]

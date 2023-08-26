@@ -1,8 +1,8 @@
 <?php
 
-namespace NorvuTec\CronManagerBundle\Controller;
+namespace Norvutec\CronManagerBundle\Controller;
 
-use App\Controller\AbstractController;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class CronManagementController extends AbstractController
 {
