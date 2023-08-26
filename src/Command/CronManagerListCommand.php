@@ -28,7 +28,7 @@ class CronManagerListCommand extends Command {
 
     protected function execute(InputInterface $input, OutputInterface $output): int {
         $table = new Table($output);
-        $table->setHeaders(["Tag", "Name", "Command", "Last run", "Last completed", "Last error"]);
+        $table->setHeaders(["Tag", "Name", "Command", "Schedule", "Last run", "Last completed", "Last error"]);
 
         /** @var CronJobHistoryRepository $cronJobRepository */
         $cronJobRepository = $this->entityManager->getRepository(CronJobHistory::class);
@@ -42,6 +42,7 @@ class CronManagerListCommand extends Command {
                 $cronjob->getTag(),
                 $cronjob->getName(),
                 $cronjob->getCommand(),
+                $cronjob->getCronExpression(),
                 $lastRun ? $lastRun->getExitAt()->format("Y-m-d H:i:s") : "never",
                 $lastCompleted ? $lastCompleted->getExitAt()->format("Y-m-d H:i:s") : "never",
                 $lastFailed ? $lastFailed->getExitAt()->format("Y-m-d H:i:s") : "never"

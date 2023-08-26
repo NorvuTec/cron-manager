@@ -27,5 +27,9 @@ class CronjobDefinition {
         return $this->commandController->getName();
     }
 
+    public function getCronExpression(): string {
+        return $this->cronjob->getCronExpression();
+    }
+
 
 }
