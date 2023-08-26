@@ -5,6 +5,9 @@ namespace Norvutec\CronManagerBundle\Model;
 use Norvutec\CronManagerBundle\Attribute\Cronjob;
 use Symfony\Component\Console\Command\Command;
 
+/**
+ * Internal definition of a cronjob for service and management purposes
+ */
 class CronjobDefinition {
 
     public function __construct(
