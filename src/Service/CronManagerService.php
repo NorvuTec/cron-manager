@@ -8,10 +8,12 @@ use Norvutec\CronManagerBundle\Attribute\Cronjob;
 use Norvutec\CronManagerBundle\Model\CronjobDefinition;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
  * Service for managing cronjobs
  */
+#[AutoconfigureTag("norvutec.cron_manager_bundle.service")]
 class CronManagerService {
 
     /**

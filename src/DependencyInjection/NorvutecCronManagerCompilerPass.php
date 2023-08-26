@@ -3,6 +3,7 @@
 namespace Norvutec\CronManagerBundle\DependencyInjection;
 
 use Norvutec\CronManagerBundle\Service\CronManagerService;
+use PHPUnit\Util\Exception;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;

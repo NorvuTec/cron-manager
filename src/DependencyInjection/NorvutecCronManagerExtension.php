@@ -2,6 +2,7 @@
 
 namespace Norvutec\CronManagerBundle\DependencyInjection;
 
+use Norvutec\CronManagerBundle\Service\CronManagerService;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -16,8 +17,8 @@ class NorvutecCronManagerExtension extends Extension
             $container,
             new FileLocator(__DIR__ . '/../../config')
         );
-
         $loader->load('services.yaml');
+
     }
 
 }

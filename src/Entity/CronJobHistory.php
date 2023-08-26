@@ -5,7 +5,6 @@ namespace Norvutec\CronManagerBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Norvutec\CronManagerBundle\Model\CronJobStatus;
 use Norvutec\CronManagerBundle\Repository\CronJobHistoryRepository;
-use Symfony\Component\Console\Command\Command;
 
 #[ORM\Table()]
 #[ORM\Entity(repositoryClass: CronJobHistoryRepository::class)]
