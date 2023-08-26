@@ -1,6 +1,14 @@
 {
-    "type": "project",
-    "license": "proprietary",
+    "name": "norvutec/cron-manager",
+    "type": "symfony-bundle",
+    "description": "Bundle for managing cronjobs in a symfony project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "NorvuTec UG(haftungsbeschränkt)",
+            "email": "info@norvutec.de"
+        }
+    ],
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
