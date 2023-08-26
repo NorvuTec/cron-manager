@@ -3,6 +3,7 @@
 namespace Norvutec\CronManagerBundle\Attribute;
 
 use Attribute;
+use Norvutec\CronManagerBundle\Model\DuplicateCronjobTagException;
 
 /**
  *
@@ -12,12 +13,19 @@ use Attribute;
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 class Cronjob {
 
+    private static array $knownTags = [];
+
     public function __construct(
-        private string $tag,
+        private string $tag, /* Unique identifier */
         private string $name,
         private string $cronExpression,
         private ?array $commandArgs = null
-    ) {}
+    ) {
+        if(in_array($this->tag, self::$knownTags)) {
+            throw new DuplicateCronjobTagException($this->tag);
+        }
+        self::$knownTags[] = $this->tag;
+    }
 
     public function getTag(): string
     {

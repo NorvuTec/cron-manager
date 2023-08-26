@@ -43,9 +43,9 @@ class CronManagerListCommand extends Command {
                 $cronjob->getName(),
                 $cronjob->getCommand(),
                 $cronjob->getCronExpression(),
-                $lastRun ? $lastRun->getExitAt()->format("Y-m-d H:i:s") : "never",
-                $lastCompleted ? $lastCompleted->getExitAt()->format("Y-m-d H:i:s") : "never",
-                $lastFailed ? $lastFailed->getExitAt()->format("Y-m-d H:i:s") : "never"
+                $lastRun ? $lastRun->getExitAt()->format("Y-m-d H:i:s") : "<fg=red>never</>",
+                $lastCompleted ? $lastCompleted->getExitAt()->format("Y-m-d H:i:s") : "<fg=red>never</>",
+                $lastFailed ? $lastFailed->getExitAt()->format("Y-m-d H:i:s") : "<fg=green>never</>"
             ]);
         }
         $table->render();

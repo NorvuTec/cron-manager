@@ -11,7 +11,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
- * Service for managing cronjobs
+ * Service for managing the known {@link Cronjob}s and the execution of them
  */
 #[AutoconfigureTag("norvutec.cron_manager_bundle.service")]
 class CronManagerService {
@@ -37,12 +37,13 @@ class CronManagerService {
             return;
         }
         $reflection = new \ReflectionClass($commandController);
-        $cronAttribute = $reflection->getAttributes(Cronjob::class);
-        if(count($cronAttribute) == 0) {
+        $cronAttributes = $reflection->getAttributes(Cronjob::class);
+        if(count($cronAttributes) == 0) {
             return;
         }
-        $cronAttribute = $cronAttribute[0]->newInstance();
-        $this->cronjobs->add(new CronjobDefinition($cronAttribute, $commandController));
+        foreach($cronAttributes as $cronAttribute) {
+            $this->cronjobs->add(new CronjobDefinition($cronAttribute->newInstance(), $commandController));
+        }
     }
 
     /**
