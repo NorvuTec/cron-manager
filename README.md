@@ -59,3 +59,9 @@ Show a list of all jobs. Job names are show with ```[x]``` if they are enabled a
 ```shell
 bin/console cron-manager:run [--force] [job]
 ```
+
+Dependencies
+------------------
+
+CronManager requires ``symfony/lock`` to lock the job execution. 
+If you want to use named locks, use cronmanager as keyword.

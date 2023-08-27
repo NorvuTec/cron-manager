@@ -15,7 +15,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
     name: "cron-manager:list",
-    description: '[Cron-Manager] Lists all cronjobs'
+    description: 'Lists all annotated cronjobs'
 )]
 class CronManagerListCommand extends Command {
 

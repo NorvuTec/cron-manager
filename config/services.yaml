@@ -1,5 +1,5 @@
 parameters:
-
+  cronmanager.executor: Cron\Executor\Executor
 
 services:
   _defaults:
@@ -19,3 +19,6 @@ services:
     autoconfigure: true
     public: true
     tags: [ norvutec.cron_manager_bundle.service ]
+  cronmanager.executor:
+    class: "%cronmanager.executor%"
+    public: true

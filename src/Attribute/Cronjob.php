@@ -3,7 +3,8 @@
 namespace Norvutec\CronManagerBundle\Attribute;
 
 use Attribute;
-use Norvutec\CronManagerBundle\Model\DuplicateCronjobTagException;
+use Norvutec\CronManagerBundle\Model\Exception\DuplicateCronjobTagException;
+use Norvutec\CronManagerBundle\Model\Exception\InvalidCronjobTagException;
 
 /**
  *
@@ -23,6 +24,9 @@ class Cronjob {
     ) {
         if(in_array($this->tag, self::$knownTags)) {
             throw new DuplicateCronjobTagException($this->tag);
+        }
+        if(strlen($this->tag) > 50) {
+            throw new InvalidCronjobTagException($this->tag);
         }
         self::$knownTags[] = $this->tag;
     }
