@@ -34,5 +34,8 @@ class CronjobDefinition {
         return $this->cronjob->getCronExpression();
     }
 
+    public function getLastRequiredExecution(): ?\DateTime {
+
+    }
 
 }
