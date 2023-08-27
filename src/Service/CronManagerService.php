@@ -10,6 +10,7 @@ use Norvutec\CronManagerBundle\Model\Exception\CronjobNotFoundException;
 use Norvutec\CronManagerBundle\Model\Exception\UnableToForceLockJobException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+use Symfony\Component\Lock\Lock;
 use Symfony\Component\Lock\LockFactory;
 
 /**
@@ -77,7 +78,7 @@ class CronManagerService {
         if(!$this->isOnDue($cronjob) && !$force) {
             return null;
         }
-        if(!$this->claimRunLock($cronjob, $force)) {
+        if(!$this->claimRunLock($cronjob)) {
             if($force) {
                 throw new UnableToForceLockJobException($tag);
             }
@@ -93,21 +94,53 @@ class CronManagerService {
     public function findNextCronjobForExecution(): ?CronjobDefinition {
 
 
-        if(!$this->claimRunLock($job, false)) {
+        if(!$this->claimRunLock($job)) {
             return null;
         }
         return null;
     }
 
-    public function claimRunLock(CronjobDefinition $job, bool $force = false): bool {
-        $this->cronmanagerLockFactory->createLock()
+    /**
+     * Locks the job for execution
+     * @param CronjobDefinition $job Job to lock
+     * @return bool was locked for this process
+     */
+    public function claimRunLock(CronjobDefinition $job): bool {
+        $jobLock = $this->getLock($job);
+        if(!$jobLock->acquire()) {
+            return false;
+        }
+        if(!$jobLock->isAcquired()) {
+            return false;
+        }
         return true;
     }
 
+    /**
+     * Releases the lock of the job
+     * @param CronjobDefinition $job Job to release
+     * @return void
+     */
     public function releaseRunLock(CronjobDefinition $job): void {
-
+        $this->getLock($job)->release();
     }
 
+    /**
+     * Gets the lock object of the {@link LockFactory}
+     * @param CronjobDefinition $job Job to get the lock for
+     * @return Lock The lock object
+     */
+    private function getLock(CronjobDefinition $job): Lock {
+        return $this->cronmanagerLockFactory->createLock(
+            "cronmanager:job:{$job->getTag()}"
+        );
+    }
+
+    /**
+     * Checks if the job is on due
+     * @param CronjobDefinition $job Job to check
+     * @return bool Is on due
+     */
     public function isOnDue(CronjobDefinition $job): bool {
         return true;
     }
