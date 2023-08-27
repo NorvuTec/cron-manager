@@ -23,10 +23,11 @@ use Symfony\Component\Process\PhpExecutableFinder;
 class CronManagerRunCommand extends Command
 {
     public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly CronManagerService $service
+        private readonly ContainerInterface     $container,
+        private readonly CronManagerService     $service
     )
     {
+        parent::__construct();
     }
 
     protected function configure()

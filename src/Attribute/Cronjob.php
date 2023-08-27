@@ -3,7 +3,11 @@
 namespace Norvutec\CronManagerBundle\Attribute;
 
 use Attribute;
+use Cron\Exception\InvalidPatternException;
+use Cron\Validator\CrontabValidator;
+use Norvutec\CronManagerBundle\Model\CronjobSchedule;
 use Norvutec\CronManagerBundle\Model\Exception\DuplicateCronjobTagException;
+use Norvutec\CronManagerBundle\Model\Exception\InvalidCronExpressionException;
 use Norvutec\CronManagerBundle\Model\Exception\InvalidCronjobTagException;
 
 /**
@@ -16,10 +20,17 @@ class Cronjob {
 
     private static array $knownTags = [];
 
+    private CronjobSchedule $cronSchedule;
+
+    /**
+     * @throws InvalidCronjobTagException
+     * @throws InvalidCronExpressionException
+     * @throws DuplicateCronjobTagException
+     */
     public function __construct(
         private string $tag, /* Unique identifier */
         private string $name,
-        private string $cronExpression,
+        string $cronExpression,
         private ?array $commandArgs = null
     ) {
         if(in_array($this->tag, self::$knownTags)) {
@@ -29,6 +40,12 @@ class Cronjob {
             throw new InvalidCronjobTagException($this->tag);
         }
         self::$knownTags[] = $this->tag;
+        $validator = new CrontabValidator();
+        try {
+            $this->cronSchedule = new CronjobSchedule($validator->validate($cronExpression));
+        } catch (InvalidPatternException $e) {
+            throw new InvalidCronExpressionException($cronExpression);
+        }
     }
 
     public function getTag(): string
@@ -41,9 +58,12 @@ class Cronjob {
         return $this->name;
     }
 
-    public function getCronExpression(): string
+    /**
+     * @return CronjobSchedule
+     */
+    public function getCronSchedule(): CronjobSchedule
     {
-        return $this->cronExpression;
+        return $this->cronSchedule;
     }
 
     public function getCommandArgs(): ?array
