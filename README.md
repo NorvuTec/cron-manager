@@ -46,6 +46,16 @@ bin/console cron-manager:run
 * * * * * /path/to/symfony/install/app/console cron-manager:run 1>> /dev/null 2>&1
 ```
 
+6. If you want to use the overview controller, create the file ``config/routes/norvutec_cronmanager.yaml`` with the following content:
+```yaml
+norvutec_cronmanager:
+  resource: '@NorvutecCronManagerBundle/config/routes.yaml'
+  prefix: '/cron-manager'
+```
+You now have access to the following routes:
+* ``cronmanager_index`` : Overview of all jobs
+* ``cronmanager_details`` : Details of a specific job
+
 Available commands
 ------------------
 

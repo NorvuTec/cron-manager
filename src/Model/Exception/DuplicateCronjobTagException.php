@@ -9,7 +9,7 @@ namespace Norvutec\CronManagerBundle\Model\Exception;
 class DuplicateCronjobTagException extends CronManagerException {
 
     public function __construct(private readonly string $tag) {
-        parent::__construct("[Duplicate tag '$tag' found in cronjob definitions.");
+        parent::__construct("Duplicate tag '$tag' found in cronjob definitions.");
     }
 
     /**

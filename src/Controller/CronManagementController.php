@@ -29,7 +29,7 @@ class CronManagementController extends AbstractController
             $displayCronJobs[] = $displayCron;
         }
 
-        return $this->render('@NorvutecCronManager/index.html.twig', [
+        return $this->render('@NorvutecCronManagerBundle/CronManagement/index.html.twig', [
             "cronjobs" => $displayCronJobs
         ]);
     }
