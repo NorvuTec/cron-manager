@@ -3,7 +3,6 @@
 namespace Norvutec\CronManagerBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use Norvutec\CronManagerBundle\Entity\CronJobHistory;
 use Norvutec\CronManagerBundle\Model\CronJobStatus;
@@ -109,6 +108,27 @@ class CronJobHistoryRepository extends ServiceEntityRepository
             ])
             ->setMaxResults(1);
         return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    /**
+     * Gets the last cronjob execution of all jobs
+     * [Tag] = LastRun
+     * @return array
+     */
+    public function getMappedLatestRuns(): array {
+        $qb = $this->createQueryBuilder('c');
+        $qb->select('c.tag as job, c.MAX(c.exitAt) as lastRun')
+            ->where($qb->expr()->neq('c.status', ":status"))
+            ->setParameters([
+                'status' => CronJobStatus::RUNNING
+            ])
+            ->groupBy('c.tag')
+            ->orderBy('c.exitAt', 'DESC');
+        $data = [];
+        foreach($qb->getQuery()->getResult() as $result) {
+            $data[$result['job']] = $result['lastRun'];
+        }
+        return $data;
     }
 
 }

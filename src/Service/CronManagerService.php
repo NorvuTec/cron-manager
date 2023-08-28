@@ -2,12 +2,13 @@
 
 namespace Norvutec\CronManagerBundle\Service;
 
-use Cron\Cron;
 use Doctrine\Common\Collections\ArrayCollection;
 use Norvutec\CronManagerBundle\Attribute\Cronjob;
 use Norvutec\CronManagerBundle\Model\CronjobDefinition;
+use Norvutec\CronManagerBundle\Model\CronJobStatus;
 use Norvutec\CronManagerBundle\Model\Exception\CronjobNotFoundException;
 use Norvutec\CronManagerBundle\Model\Exception\UnableToForceLockJobException;
+use Norvutec\CronManagerBundle\Repository\CronJobHistoryRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\Lock\Lock;
@@ -26,7 +27,8 @@ class CronManagerService {
     private ArrayCollection $cronjobs;
 
     public function __construct(
-        private readonly LockFactory $cronmanagerLockFactory
+        private readonly LockFactory $cronmanagerLockFactory,
+        private readonly CronJobHistoryRepository $historyRepository
     ) {
         $this->cronjobs = new ArrayCollection();
     }
@@ -89,13 +91,45 @@ class CronManagerService {
 
     /**
      * Searches for the next job needs to be executed
+     * It also claims for execution
      * @return CronjobDefinition|null
      */
     public function findNextCronjobForExecution(): ?CronjobDefinition {
+        $lastRuns = $this->historyRepository->getMappedLatestRuns();
+        $lastRunMap = [];
+        $cronList = $this->cronjobs->toArray();
+        usort($cronList, function($a, $b) use ($lastRuns) {
+            $ad = $lastRuns[$a->getTag()];
+            $bd = $lastRuns[$b->getTag()];
 
+            if ($ad == $bd) {
+                return 0;
+            }
 
-        if(!$this->claimRunLock($job)) {
-            return null;
+            if($ad == null) {
+                return -1;
+            }
+
+            if($bd == null) {
+                return 1;
+            }
+
+            return $ad < $bd ? -1 : 1;
+        });
+        /** @var CronjobDefinition $cronjob */
+        foreach($cronList as $cronjob) {
+            if(!array_key_exists($cronjob->getTag(), $lastRuns)) {
+                if($this->claimRunLock($cronjob)) {
+                    return $cronjob;
+                }
+                // Could not be claimed, get next
+                continue;
+            }
+            if($this->isOnDue($cronjob)) {
+                if($this->claimRunLock($cronjob)) {
+                    return $cronjob;
+                }
+            }
         }
         return null;
     }
@@ -142,6 +176,16 @@ class CronManagerService {
      * @return bool Is on due
      */
     public function isOnDue(CronjobDefinition $job): bool {
+        try {
+            $lastRunDate = $job->getCronExpression()->getPreviousRunDate(new \DateTime(), 0, true);
+            $lastCompletedRun = $this->historyRepository->getLastCompleted($job->getTag());
+            if($lastCompletedRun->getRunAt() >= $lastRunDate && $lastCompletedRun->getStatus() == CronJobStatus::SUCCESS) {
+                return false;
+            }
+        }catch (\Exception $e) {
+            throwException($e);
+            return false;
+        }
         return true;
     }
 

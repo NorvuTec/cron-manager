@@ -3,9 +3,8 @@
 namespace Norvutec\CronManagerBundle\Attribute;
 
 use Attribute;
-use Cron\Exception\InvalidPatternException;
-use Cron\Validator\CrontabValidator;
-use Norvutec\CronManagerBundle\Model\CronjobSchedule;
+use Cron\CronExpression;
+use InvalidArgumentException;
 use Norvutec\CronManagerBundle\Model\Exception\DuplicateCronjobTagException;
 use Norvutec\CronManagerBundle\Model\Exception\InvalidCronExpressionException;
 use Norvutec\CronManagerBundle\Model\Exception\InvalidCronjobTagException;
@@ -20,7 +19,7 @@ class Cronjob {
 
     private static array $knownTags = [];
 
-    private CronjobSchedule $cronSchedule;
+    private CronExpression $cronSchedule;
 
     /**
      * @throws InvalidCronjobTagException
@@ -28,10 +27,10 @@ class Cronjob {
      * @throws DuplicateCronjobTagException
      */
     public function __construct(
-        private string $tag, /* Unique identifier */
-        private string $name,
-        string $cronExpression,
-        private ?array $commandArgs = null
+        private readonly string $tag, /* Unique identifier */
+        private readonly string $name,
+        string                  $cronExpression,
+        private readonly ?array $commandArgs = null
     ) {
         if(in_array($this->tag, self::$knownTags)) {
             throw new DuplicateCronjobTagException($this->tag);
@@ -40,10 +39,9 @@ class Cronjob {
             throw new InvalidCronjobTagException($this->tag);
         }
         self::$knownTags[] = $this->tag;
-        $validator = new CrontabValidator();
         try {
-            $this->cronSchedule = new CronjobSchedule($validator->validate($cronExpression));
-        } catch (InvalidPatternException $e) {
+            $this->cronSchedule = new CronExpression($cronExpression);
+        } catch (InvalidArgumentException $e) {
             throw new InvalidCronExpressionException($cronExpression);
         }
     }
@@ -59,9 +57,9 @@ class Cronjob {
     }
 
     /**
-     * @return CronjobSchedule
+     * @return CronExpression
      */
-    public function getCronSchedule(): CronjobSchedule
+    public function getCronSchedule(): CronExpression
     {
         return $this->cronSchedule;
     }

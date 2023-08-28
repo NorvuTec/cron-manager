@@ -39,11 +39,10 @@ class CronJobHistory {
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $exitCode = null;
 
-    #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $output = null;
+    private array $output = [];
 
-    #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $error = null;
+    #[ORM\Column]
+    private array $error = [];
 
     public function getId(): ?int
     {
@@ -136,26 +135,47 @@ class CronJobHistory {
     public function setExitCode(int $exitCode): self
     {
         $this->exitCode = $exitCode;
+        if($this->getStatus() == CronJobStatus::RUNNING) {
+            if ($exitCode == 99) {
+                $this->setStatus(CronJobStatus::UNKNOWN);
+            } elseif ($exitCode == 0) {
+                $this->setStatus(CronJobStatus::SUCCESS);
+            } else {
+                $this->setStatus(CronJobStatus::FAILED);
+            }
+        }
         return $this;
     }
 
-    public function getOutput(): ?string
+    public function getOutput(): array
     {
         return $this->output;
     }
 
-    public function setOutput(?string $output): self
+    public function addOutput(string $output): self
+    {
+        $this->output[] = $output;
+        return $this;
+    }
+
+    public function setOutput(array $output): self
     {
         $this->output = $output;
         return $this;
     }
 
-    public function getError(): ?string
+    public function getError(): array
     {
         return $this->error;
     }
 
-    public function setError(?string $error): self
+    public function addError(string $error): self
+    {
+        $this->error[] = $error;
+        return $this;
+    }
+
+    public function setError(array $error): self
     {
         $this->error = $error;
         return $this;

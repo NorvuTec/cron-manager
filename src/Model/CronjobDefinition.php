@@ -2,7 +2,7 @@
 
 namespace Norvutec\CronManagerBundle\Model;
 
-use Cron\Schedule\CrontabSchedule;
+use Cron\CronExpression;
 use Norvutec\CronManagerBundle\Attribute\Cronjob;
 use Symfony\Component\Console\Command\Command;
 
@@ -31,13 +31,12 @@ class CronjobDefinition {
         return $this->commandController->getName();
     }
 
-    public function getCronExpression(): string {
-        return $this->cronjob->getCronExpression();
+    public function getCronExpression(): CronExpression {
+        return $this->cronjob->getCronSchedule();
     }
 
-    public function getLastRequiredExecution(): ?\DateTime {
-        $schedule = new CrontabSchedule($this->getCronExpression());
-
+    public function getExecutionArgs(): array {
+        return $this->cronjob->getCommandArgs();
     }
 
 }
