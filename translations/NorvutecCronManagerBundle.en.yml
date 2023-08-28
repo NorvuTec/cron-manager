@@ -1,0 +1,16 @@
+cronjob:
+  tag: 'Job-Tag'
+  name: 'Name'
+  schedule: 'Schedule'
+  last_execution: 'Last execution'
+  last_status: 'Last status'
+  next_execution: 'Next execution'
+  never: 'never'
+  actions: 'Aktionen'
+  details: 'Details'
+  status:
+    unknown: 'Unknown'
+    success: 'Success'
+    failed: 'Failed'
+    running: 'Running'
+    skipped: 'Skipped'

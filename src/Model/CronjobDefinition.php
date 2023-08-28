@@ -12,8 +12,8 @@ use Symfony\Component\Console\Command\Command;
 class CronjobDefinition {
 
     public function __construct(
-        private readonly Cronjob $cronjob,
-        private readonly Command $commandController
+        protected readonly Cronjob $cronjob,
+        protected readonly Command $commandController
     )
     {
 

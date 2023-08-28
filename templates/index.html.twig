@@ -1,0 +1,34 @@
+<table>
+    <thead>
+    <tr>
+        <th>{{ 'cronjob.tag'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <th>{{ 'cronjob.name'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <th>{{ 'cronjob.schedule'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <th>{{ 'cronjob.last_execution'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <th>{{ 'cronjob.last_status'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <th>{{ 'cronjob.next_execution'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <th>{{ 'cronjob.actions'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for cronjob in cronjobs %}
+        <tr>
+            <td>{{ cronjob.getTag() }}</td>
+            <td>{{ cronjob.getName() }}</td>
+            <td>{{ cronjob.getCronExpression().getExpression() }}</td>
+            {% if cronjob.getLastRun() %}
+                <td>{{ cronjob.getLastRun().getExitAt()|date }}</td>
+                <td>{{ ('cronjob.status.'~cronjob.getLastRun().getStatus().getValue()|lower)|trans({}, 'NorvutecCronManagerBundle') }}</td>
+            {% else %}
+                <td>{{ 'cronjob.never'|trans({}, 'NorvutecCronManagerBundle') }}</td>
+                <td>--</td>
+            {% endif %}
+            <td>
+                <a href="{{ path('cronmanager_details', {'tag': cronjob.getTag()}) }}">
+                    {{ 'cronjob.details'|trans({}, 'NorvutecCronManagerBundle') }}
+                </a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

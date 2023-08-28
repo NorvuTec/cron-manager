@@ -6,6 +6,7 @@ services:
     autowire: true
     autoconfigure: true
 
+  Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
   Norvutec\CronManagerBundle\Controller\CronManagementController: ~
   Norvutec\CronManagerBundle\Command\:
     resource: '../src/Command'
