@@ -36,6 +36,9 @@ class CronjobDefinition {
     }
 
     public function getExecutionArgs(): array {
+        if($this->cronjob->getCommandArgs() == null) {
+            return [];
+        }
         return $this->cronjob->getCommandArgs();
     }
 
