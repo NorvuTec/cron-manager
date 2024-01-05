@@ -117,7 +117,7 @@ class CronJobHistoryRepository extends ServiceEntityRepository
      */
     public function getMappedLatestRuns(): array {
         $qb = $this->createQueryBuilder('c');
-        $qb->select('c.tag as job, c.MAX(c.exitAt) as lastRun')
+        $qb->select('c.tag as job, MAX(c.exitAt) as lastRun')
             ->where($qb->expr()->neq('c.status', ":status"))
             ->setParameters([
                 'status' => CronJobStatus::RUNNING
