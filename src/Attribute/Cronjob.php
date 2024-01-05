@@ -32,13 +32,13 @@ class Cronjob {
         string                  $cronExpression,
         private readonly ?array $commandArgs = null
     ) {
-        if(array_key_exists($this->tag, self::$knownTags) && self::$knownTags[$this->tag] != $this) {
+        if(array_key_exists($this->tag, self::$knownTags) && self::$knownTags[$this->tag] != get_class($this)) {
             throw new DuplicateCronjobTagException($this->tag);
         }
         if(strlen($this->tag) > 50) {
             throw new InvalidCronjobTagException($this->tag);
         }
-        self::$knownTags[$this->tag] = $this;
+        self::$knownTags[$this->tag] = get_class($this);
         try {
             $this->cronSchedule = new CronExpression($cronExpression);
         } catch (InvalidArgumentException $e) {
