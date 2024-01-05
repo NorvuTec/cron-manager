@@ -71,7 +71,7 @@ class CronManagerRunCommand extends Command
             $command = sprintf("%s %s %s %s %s",
                 escapeshellarg($phpExecutable),
                 join(" ", $defines),
-                "\"".$rootDir.'bin/console\"',
+                $rootDir.'/bin/console',
                 $job->getCommand(),
                 join(" ", $job->getExecutionArgs())
             );
