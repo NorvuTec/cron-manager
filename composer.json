@@ -1,6 +1,6 @@
 {
   "name": "norvutec/cron-manager",
-  "version": "1.0.7",
+  "version": "7.0.0",
   "type": "symfony-bundle",
   "description": "Bundle for managing cronjobs in a symfony project",
   "license": "MIT",
@@ -13,15 +13,15 @@
   ],
   "require": {
     "php": ">=8.1",
-    "symfony/framework-bundle": "^6.0",
-    "symfony/lock": "^6.0",
+    "symfony/framework-bundle": "^7.0",
+    "symfony/lock": "^7.0",
     "doctrine/doctrine-bundle": "~1.4|~2.0",
     "doctrine/orm": "~2.4,>=2.4.5",
     "dragonmantank/cron-expression": "^2.2 || ^3.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^8.0",
-    "symfony/symfony": "^6.0"
+    "symfony/symfony": "^7.0"
   },
   "autoload": {
     "psr-4": {
