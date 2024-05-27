@@ -9,8 +9,7 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class NorvutecCronManagerCompilerPass implements CompilerPassInterface {
 
-    public function process(ContainerBuilder $container)
-    {
+    public function process(ContainerBuilder $container) : void {
         if(!$container->has(CronManagerService::class)) {
             return;
         }
