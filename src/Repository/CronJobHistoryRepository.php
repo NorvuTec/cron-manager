@@ -50,9 +50,7 @@ class CronJobHistoryRepository extends ServiceEntityRepository
         $qb->where('c.tag = :tag')
             ->andWhere($qb->expr()->isNotNull('c.exitAt'))
             ->orderBy('c.exitAt', 'DESC')
-            ->setParameters([
-                'tag' => $tag,
-            ])
+            ->setParameter('tag', $tag)
             ->setMaxResults(1);
         return $qb->getQuery()->getOneOrNullResult();
     }
@@ -67,9 +65,7 @@ class CronJobHistoryRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('c');
         $qb->where('c.tag = :tag')
             ->andWhere($qb->expr()->isNull('c.exitAt'))
-            ->setParameters([
-                'tag' => $tag,
-            ])
+            ->setParameter('tag', $tag)
             ->setMaxResults(1);
         return $qb->getQuery()->getOneOrNullResult();
     }
@@ -84,10 +80,8 @@ class CronJobHistoryRepository extends ServiceEntityRepository
         $qb->where('c.tag = :tag')
             ->andWhere($qb->expr()->eq('c.status', ':status'))
             ->orderBy('c.exitAt', 'DESC')
-            ->setParameters([
-                'tag' => $tag,
-                'status' => CronJobStatus::FAILED
-            ])
+            ->setParameter('tag', $tag)
+            ->setParameter('status', CronJobStatus::FAILED)
             ->setMaxResults(1);
         return $qb->getQuery()->getOneOrNullResult();
     }
@@ -102,10 +96,8 @@ class CronJobHistoryRepository extends ServiceEntityRepository
         $qb->where('c.name = :tag')
             ->andWhere($qb->expr()->eq('c.status', ':status'))
             ->orderBy('c.exitAt', 'DESC')
-            ->setParameters([
-                'tag' => $tag,
-                'status' => CronJobStatus::SUCCESS
-            ])
+            ->setParameter('tag', $tag)
+            ->setParameter('status', CronJobStatus::SUCCESS)
             ->setMaxResults(1);
         return $qb->getQuery()->getOneOrNullResult();
     }
@@ -119,9 +111,7 @@ class CronJobHistoryRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('c');
         $qb->select('c.tag as job, MAX(c.exitAt) as lastRun')
             ->where($qb->expr()->neq('c.status', ":status"))
-            ->setParameters([
-                'status' => CronJobStatus::RUNNING
-            ])
+            ->setParameter('status', CronJobStatus::RUNNING)
             ->groupBy('c.tag')
             ->orderBy('c.exitAt', 'DESC');
         $data = [];
