@@ -1,6 +1,6 @@
 {
   "name": "norvutec/cron-manager",
-  "version": "7.1.2",
+  "version": "7.1.3",
   "type": "symfony-bundle",
   "description": "Bundle for managing cronjobs in a symfony project",
   "license": "MIT",

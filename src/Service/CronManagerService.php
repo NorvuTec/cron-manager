@@ -99,8 +99,8 @@ class CronManagerService {
         $lastRunMap = [];
         $cronList = $this->cronjobs->toArray();
         usort($cronList, function($a, $b) use ($lastRuns) {
-            $ad = $lastRuns[$a->getTag()];
-            $bd = $lastRuns[$b->getTag()];
+            $ad = array_key_exists($a->getTag(), $lastRuns) ? $lastRuns[$a->getTag()] : null;
+            $bd = array_key_exists($b->getTag(), $lastRuns) ? $lastRuns[$b->getTag()] : null;
 
             if ($ad == $bd) {
                 return 0;
