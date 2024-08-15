@@ -57,6 +57,14 @@ class CronManagerRunCommand extends Command
                 return Command::SUCCESS;
             }
 
+            $monitorConfig = new \Sentry\MonitorConfig(
+                \Sentry\MonitorSchedule::crontab($job->getCronExpression()),
+            );
+            $checkInId = \Sentry\captureCheckIn(
+                slug: $job->getTag(),
+                status: \Sentry\CheckInStatus::inProgress(),
+                monitorConfig: $monitorConfig,
+            );
             $finder = new PhpExecutableFinder();
             $phpExecutable = $finder->find();
             $rootDir = $this->container->getParameter('kernel.project_dir');
@@ -104,6 +112,19 @@ class CronManagerRunCommand extends Command
             $jobHistory->setExitCode($process->getExitCode());
             $jobHistory->setExitAt(new \DateTime());
             $this->historyRepository->save($jobHistory, true);
+            iF($process->getExitCode() == 0) {
+                \Sentry\captureCheckIn(
+                    slug: $job->getTag(),
+                    status: \Sentry\CheckInStatus::ok(),
+                    checkInId: $checkInId,
+                );
+            }else {
+                \Sentry\captureCheckIn(
+                    slug: $job->getTag(),
+                    status: \Sentry\CheckInStatus::error(),
+                    checkInId: $checkInId,
+                );
+            }
         } catch (CronjobNotFoundException $e) {
             $output->writeln("<error>[ERROR] {$e->getMessage()}</error>");
             return Command::INVALID;
