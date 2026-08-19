@@ -1,4 +1,4 @@
 norvutec_cron_manager_bundle.routes:
-  type: annotation
+  type: attribute
   resource: '../src/Controller'
   name_prefix: 'cronmanager_'

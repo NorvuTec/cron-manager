@@ -13,20 +13,13 @@ Installing this bundle can be done through these simple steps:
 composer require norvutec/cron-manager
 ```
 
-2. Add the bundle to your application kernel:
+2. Enable the bundle in your app:
 ```php
-// app/AppKernel.php
-public function registerBundles()
-{
+// config/bundles.php
+return [
     // ...
-    $bundle = array(
-        // ...
-        new NorvuTec\CronManagerBundle\NorvuTecCronManagerBundle(),
-    );
-    // ...
-
-    return $bundle;
-}
+    Norvutec\CronManagerBundle\NorvutecCronManagerBundle::class => ['all' => true],
+];
 ```
 
 3. Update your DB schema
@@ -43,7 +36,7 @@ bin/console cron-manager:run
 
 5. To run your cron jobs automatically, add the following line to your (or whomever's) crontab:
 ```
-* * * * * /path/to/symfony/install/app/console cron-manager:run 1>> /dev/null 2>&1
+* * * * * /path/to/symfony/install/bin/console cron-manager:run 1>> /dev/null 2>&1
 ```
 
 6. If you want to use the overview controller, create the file ``config/routes/norvutec_cronmanager.yaml`` with the following content:
@@ -73,5 +66,6 @@ bin/console cron-manager:run [--force] [job]
 Dependencies
 ------------------
 
-CronManager requires ``symfony/lock`` to lock the job execution. 
+CronManager targets Symfony ``^8.0`` and requires PHP ``>=8.4``.
+It uses ``symfony/lock`` for execution locks.
 If you want to use named locks, use cronmanager as keyword.

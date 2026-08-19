@@ -1,0 +1,31 @@
+<h1>{{ cronjob.getName() }}</h1>
+
+<table>
+    <tbody>
+    <tr>
+        <th>{{ 'cronjob.tag'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <td>{{ cronjob.getTag() }}</td>
+    </tr>
+    <tr>
+        <th>{{ 'cronjob.schedule'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <td>{{ cronjob.getCronExpression().getExpression() }}</td>
+    </tr>
+    <tr>
+        <th>{{ 'cronjob.last_execution'|trans({}, 'NorvutecCronManagerBundle') }}</th>
+        <td>{{ cronjob.getLastRun() ? cronjob.getLastRun().getExitAt()|date : 'cronjob.never'|trans({}, 'NorvutecCronManagerBundle') }}</td>
+    </tr>
+    <tr>
+        <th>Last successful</th>
+        <td>{{ lastSuccessfulRun ? lastSuccessfulRun.getExitAt()|date : 'never' }}</td>
+    </tr>
+    <tr>
+        <th>Last failed</th>
+        <td>{{ lastFailedRun ? lastFailedRun.getExitAt()|date : 'never' }}</td>
+    </tr>
+    </tbody>
+</table>
+
+<p>
+    <a href="{{ path('cronmanager_index') }}">Back</a>
+</p>
+

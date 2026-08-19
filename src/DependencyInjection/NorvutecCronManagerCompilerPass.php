@@ -15,8 +15,8 @@ class NorvutecCronManagerCompilerPass implements CompilerPassInterface {
         }
         $definition = $container->findDefinition(CronManagerService::class);
         $taggedServices = $container->findTaggedServiceIds('norvutec.cron_manager_bundle.cronjob');
-        foreach($taggedServices as $id => $tags) {
-            $definition->addMethodCall('addCronjobService', [new Reference($id), $tags]);
+        foreach($taggedServices as $id => $_) {
+            $definition->addMethodCall('addCronjobService', [new Reference($id)]);
         }
     }
 

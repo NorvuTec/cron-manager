@@ -18,7 +18,7 @@
             <td>{{ cronjob.getCronExpression().getExpression() }}</td>
             {% if cronjob.getLastRun() %}
                 <td>{{ cronjob.getLastRun().getExitAt()|date }}</td>
-                <td>{{ ('cronjob.status.'~cronjob.getLastRun().getStatus().getValue()|lower)|trans({}, 'NorvutecCronManagerBundle') }}</td>
+                <td>{{ ('cronjob.status.' ~ cronjob.getLastRun().getStatus().value|lower)|trans({}, 'NorvutecCronManagerBundle') }}</td>
             {% else %}
                 <td>{{ 'cronjob.never'|trans({}, 'NorvutecCronManagerBundle') }}</td>
                 <td>--</td>

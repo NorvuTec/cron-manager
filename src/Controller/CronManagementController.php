@@ -8,7 +8,7 @@ use Norvutec\CronManagerBundle\Repository\CronJobHistoryRepository;
 use Norvutec\CronManagerBundle\Service\CronManagerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class CronManagementController extends AbstractController
 {
@@ -35,8 +35,23 @@ class CronManagementController extends AbstractController
     }
 
     #[Route('/details/{tag}', name: 'details')]
-    public function details(): Response {
+    public function details(string $tag): Response {
+        $cronjob = $this->service->getCronjobs()
+            ->filter(static fn (CronjobDefinition $cronjob): bool => $cronjob->getTag() === $tag)
+            ->first();
 
+        if (!$cronjob instanceof CronjobDefinition) {
+            throw $this->createNotFoundException(sprintf('Cronjob with tag "%s" was not found.', $tag));
+        }
+
+        $displayCronJob = CronjobDisplayDefinition::of($cronjob)
+            ->setLastRun($this->historyRepository->getLastCompleted($tag));
+
+        return $this->render('@NorvutecCronManagerBundle/CronManagement/details.html.twig', [
+            'cronjob' => $displayCronJob,
+            'lastSuccessfulRun' => $this->historyRepository->getLastSuccessful($tag),
+            'lastFailedRun' => $this->historyRepository->getLastFailed($tag),
+        ]);
     }
 
 

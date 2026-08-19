@@ -39,6 +39,7 @@ class CronJobHistory {
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $exitCode = null;
 
+    #[ORM\Column]
     private array $output = [];
 
     #[ORM\Column]
@@ -112,7 +113,9 @@ class CronJobHistory {
     public function setExitAt(?\DateTime $exitAt): self
     {
         $this->exitAt = $exitAt;
-        $this->setExecutionTime(($exitAt->getTimestamp() - $this->getRunAt()->getTimestamp()));
+        if ($exitAt !== null) {
+            $this->setExecutionTime(($exitAt->getTimestamp() - $this->getRunAt()->getTimestamp()));
+        }
         return $this;
     }
 
@@ -127,18 +130,18 @@ class CronJobHistory {
         return $this;
     }
 
-    public function getExitCode(): int
+    public function getExitCode(): ?int
     {
         return $this->exitCode;
     }
 
-    public function setExitCode(int $exitCode): self
+    public function setExitCode(?int $exitCode): self
     {
         $this->exitCode = $exitCode;
-        if($this->getStatus() == CronJobStatus::RUNNING) {
-            if ($exitCode == 99) {
+        if($this->getStatus() === CronJobStatus::RUNNING && $exitCode !== null) {
+            if ($exitCode === 99) {
                 $this->setStatus(CronJobStatus::UNKNOWN);
-            } elseif ($exitCode == 0) {
+            } elseif ($exitCode === 0) {
                 $this->setStatus(CronJobStatus::SUCCESS);
             } else {
                 $this->setStatus(CronJobStatus::FAILED);

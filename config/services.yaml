@@ -1,25 +1,14 @@
-parameters:
-  cronmanager.executor: Cron\Executor\Executor
-
 services:
   _defaults:
     autowire: true
     autoconfigure: true
 
-  Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
   Norvutec\CronManagerBundle\Controller\CronManagementController: ~
   Norvutec\CronManagerBundle\Command\:
     resource: '../src/Command'
-    autowire: true
-    tags: [ console.command ]
+  Norvutec\CronManagerBundle\Command\CronManagerRunCommand:
+    bind:
+      $projectDir: '%kernel.project_dir%'
   Norvutec\CronManagerBundle\Repository\:
     resource: '../src/Repository'
     tags: [ doctrine.repository_service]
-  Norvutec\CronManagerBundle\Service\CronManagerService:
-    autowire: true
-    autoconfigure: true
-    public: true
-    tags: [ norvutec.cron_manager_bundle.service ]
-  cronmanager.executor:
-    class: "%cronmanager.executor%"
-    public: true

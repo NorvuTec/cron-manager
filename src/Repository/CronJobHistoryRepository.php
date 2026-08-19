@@ -93,7 +93,7 @@ class CronJobHistoryRepository extends ServiceEntityRepository
      */
     public function getLastSuccessful(string $tag): ?CronJobHistory {
         $qb = $this->createQueryBuilder('c');
-        $qb->where('c.name = :tag')
+        $qb->where('c.tag = :tag')
             ->andWhere($qb->expr()->eq('c.status', ':status'))
             ->orderBy('c.exitAt', 'DESC')
             ->setParameter('tag', $tag)

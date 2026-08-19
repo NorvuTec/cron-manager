@@ -7,12 +7,13 @@ use Norvutec\CronManagerBundle\Attribute\Cronjob;
 use Norvutec\CronManagerBundle\Model\CronjobDefinition;
 use Norvutec\CronManagerBundle\Model\CronJobStatus;
 use Norvutec\CronManagerBundle\Model\Exception\CronjobNotFoundException;
+use Norvutec\CronManagerBundle\Model\Exception\DuplicateCronjobTagException;
 use Norvutec\CronManagerBundle\Model\Exception\UnableToForceLockJobException;
 use Norvutec\CronManagerBundle\Repository\CronJobHistoryRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
-use Symfony\Component\Lock\Lock;
 use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Lock\SharedLockInterface;
 
 /**
  * Service for managing the known {@link Cronjob}s and the execution of them
@@ -26,6 +27,9 @@ class CronManagerService {
      */
     private ArrayCollection $cronjobs;
 
+    /** @var array<string, true> */
+    private array $registeredTags = [];
+
     public function __construct(
         private readonly LockFactory $cronmanagerLockFactory,
         private readonly CronJobHistoryRepository $historyRepository
@@ -36,20 +40,27 @@ class CronManagerService {
     /**
      * Method for {@link NorvuTecCronManagerCompilerPass} adding tagged services
      * @param object $commandController The command controller
-     * @param array $tags Tags of the service
      * @return void
      */
-    public function addCronjobService(object $commandController, array $tags): void {
+    public function addCronjobService(object $commandController): void {
         if(!($commandController instanceof Command)) {
             return;
         }
         $reflection = new \ReflectionClass($commandController);
         $cronAttributes = $reflection->getAttributes(Cronjob::class);
-        if(count($cronAttributes) == 0) {
+        if(count($cronAttributes) === 0) {
             return;
         }
         foreach($cronAttributes as $cronAttribute) {
-            $this->cronjobs->add(new CronjobDefinition($cronAttribute->newInstance(), $commandController));
+            /** @var Cronjob $cronjobAttribute */
+            $cronjobAttribute = $cronAttribute->newInstance();
+            $definition = new CronjobDefinition($cronjobAttribute, $commandController);
+            $tag = $definition->getTag();
+            if (array_key_exists($tag, $this->registeredTags)) {
+                throw new DuplicateCronjobTagException($tag);
+            }
+            $this->registeredTags[$tag] = true;
+            $this->cronjobs->add($definition);
         }
     }
 
@@ -71,7 +82,7 @@ class CronManagerService {
      */
     public function findCronjobForExecution(string $tag, bool $force = false): ?CronjobDefinition {
         $cronjob = $this->cronjobs->filter(function(CronjobDefinition $cronjob) use ($tag) {
-            return $cronjob->getTag() == $tag;
+            return $cronjob->getTag() === $tag;
         })->first();
         if(!$cronjob) {
             throw new CronjobNotFoundException($tag);
@@ -96,21 +107,20 @@ class CronManagerService {
      */
     public function findNextCronjobForExecution(): ?CronjobDefinition {
         $lastRuns = $this->historyRepository->getMappedLatestRuns();
-        $lastRunMap = [];
         $cronList = $this->cronjobs->toArray();
         usort($cronList, function($a, $b) use ($lastRuns) {
             $ad = array_key_exists($a->getTag(), $lastRuns) ? $lastRuns[$a->getTag()] : null;
             $bd = array_key_exists($b->getTag(), $lastRuns) ? $lastRuns[$b->getTag()] : null;
 
-            if ($ad == $bd) {
+            if ($ad === $bd) {
                 return 0;
             }
 
-            if($ad == null) {
+            if($ad === null) {
                 return -1;
             }
 
-            if($bd == null) {
+            if($bd === null) {
                 return 1;
             }
 
@@ -162,9 +172,9 @@ class CronManagerService {
     /**
      * Gets the lock object of the {@link LockFactory}
      * @param CronjobDefinition $job Job to get the lock for
-     * @return Lock The lock object
+     * @return SharedLockInterface The lock object
      */
-    private function getLock(CronjobDefinition $job): Lock {
+    private function getLock(CronjobDefinition $job): SharedLockInterface {
         return $this->cronmanagerLockFactory->createLock(
             "cronmanager:job:{$job->getTag()}"
         );
@@ -179,11 +189,14 @@ class CronManagerService {
         try {
             $lastRunDate = $job->getCronExpression()->getPreviousRunDate(new \DateTime(), 0, true);
             $lastCompletedRun = $this->historyRepository->getLastCompleted($job->getTag());
-            if($lastCompletedRun->getRunAt() >= $lastRunDate && $lastCompletedRun->getStatus() == CronJobStatus::SUCCESS) {
+            if (
+                $lastCompletedRun !== null
+                && $lastCompletedRun->getRunAt() >= $lastRunDate
+                && $lastCompletedRun->getStatus() === CronJobStatus::SUCCESS
+            ) {
                 return false;
             }
-        }catch (\Exception $e) {
-            throwException($e);
+        } catch (\Exception) {
             return false;
         }
         return true;

@@ -14,7 +14,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
@@ -25,7 +24,7 @@ use Symfony\Component\Process\Process;
 class CronManagerRunCommand extends Command
 {
     public function __construct(
-        private readonly ContainerInterface     $container,
+        private readonly string                 $projectDir,
         private readonly CronManagerService     $service,
         private readonly CronJobHistoryRepository $historyRepository
     )
@@ -33,7 +32,7 @@ class CronManagerRunCommand extends Command
         parent::__construct();
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->addArgument('job', InputArgument::OPTIONAL, 'Run only the single job by job tag.')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Force run the job.');
@@ -44,7 +43,7 @@ class CronManagerRunCommand extends Command
     {
         $job = null;
         try {
-            $forceJob = $input->getParameterOption('--force') !== false;
+            $forceJob = (bool) $input->getOption('force');
             if ($input->getArgument('job')) {
                 $job = $this->service->findCronjobForExecution(
                     $input->getArgument('job'), $forceJob
@@ -52,44 +51,30 @@ class CronManagerRunCommand extends Command
             } else {
                 $job = $this->service->findNextCronjobForExecution();
             }
-            if($job == null) {
+            if ($job === null) {
                 $output->writeln("<info>[OK] No cronjob to run</info>");
                 return Command::SUCCESS;
             }
 
-            $monitorConfig = new \Sentry\MonitorConfig(
-                \Sentry\MonitorSchedule::crontab($job->getCronExpression()),
-            );
-            $checkInId = \Sentry\captureCheckIn(
-                slug: $job->getTag(),
-                status: \Sentry\CheckInStatus::inProgress(),
-                monitorConfig: $monitorConfig,
-            );
             $finder = new PhpExecutableFinder();
             $phpExecutable = $finder->find();
-            $rootDir = $this->container->getParameter('kernel.project_dir');
+            if ($phpExecutable === false) {
+                $output->writeln('<error>[ERROR] Could not locate PHP executable.</error>');
+                return Command::FAILURE;
+            }
 
-            $defines = [
-                '--define max_execution_time='.ini_get('max_execution_time'),
-                '--define memory_limit='.ini_get('memory_limit')
-
-            ];
-
-            // Build command php --defines bin/console command:type --args
-            $command = sprintf("%s %s %s %s %s",
-                escapeshellarg($phpExecutable),
-                join(" ", $defines),
-                "\"".$rootDir.'/bin/console'."\"",
+            // Build process as argument array to avoid shell escaping issues across Symfony versions.
+            $command = [
+                $phpExecutable,
+                '--define',
+                'max_execution_time=' . ini_get('max_execution_time'),
+                '--define',
+                'memory_limit=' . ini_get('memory_limit'),
+                $this->projectDir . '/bin/console',
                 $job->getCommand(),
-                join(" ", $job->getExecutionArgs())
-            );
-            $cwd = null;
-            $env = null;
-            $input = null;
-            $timeout = 60;
-            $options = [];
-
-            $process = Process::fromShellCommandline($command, $cwd, $env, $input, $timeout, $options);
+                ...$job->getExecutionArgs(),
+            ];
+            $process = new Process($command, timeout: 60);
             $jobHistory = new CronJobHistory();
             $jobHistory->setTag($job->getTag());
             $jobHistory->setName($job->getName());
@@ -97,7 +82,7 @@ class CronManagerRunCommand extends Command
             $jobHistory->setHost(gethostname());
             $jobHistory->setStatus(CronJobStatus::RUNNING);
             $this->historyRepository->save($jobHistory, true);
-            $process->start(function($type, $buffer) use ($jobHistory, $output) {
+            $process->start(function (string $type, string $buffer) use ($jobHistory, $output): void {
                 if (Process::ERR === $type) {
                     $jobHistory->addError($buffer);
                     $output->writeln('<error>'.$buffer.'</error>');
@@ -112,19 +97,6 @@ class CronManagerRunCommand extends Command
             $jobHistory->setExitCode($process->getExitCode());
             $jobHistory->setExitAt(new \DateTime());
             $this->historyRepository->save($jobHistory, true);
-            iF($process->getExitCode() == 0) {
-                \Sentry\captureCheckIn(
-                    slug: $job->getTag(),
-                    status: \Sentry\CheckInStatus::ok(),
-                    checkInId: $checkInId,
-                );
-            }else {
-                \Sentry\captureCheckIn(
-                    slug: $job->getTag(),
-                    status: \Sentry\CheckInStatus::error(),
-                    checkInId: $checkInId,
-                );
-            }
         } catch (CronjobNotFoundException $e) {
             $output->writeln("<error>[ERROR] {$e->getMessage()}</error>");
             return Command::INVALID;
@@ -132,7 +104,7 @@ class CronManagerRunCommand extends Command
             $output->writeln("<error>[ERROR] {$e->getMessage()}</error>");
             return Command::FAILURE;
         } finally {
-            if($job != null) {
+            if ($job !== null) {
                 $this->service->releaseRunLock($job);
             }
         }
