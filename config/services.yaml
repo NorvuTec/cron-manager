@@ -4,6 +4,7 @@ services:
     autoconfigure: true
 
   Norvutec\CronManagerBundle\Controller\CronManagementController: ~
+  Norvutec\CronManagerBundle\Service\CronManagerService: ~
   Norvutec\CronManagerBundle\Command\:
     resource: '../src/Command'
   Norvutec\CronManagerBundle\Command\CronManagerRunCommand:
@@ -12,3 +13,4 @@ services:
   Norvutec\CronManagerBundle\Repository\:
     resource: '../src/Repository'
     tags: [ doctrine.repository_service]
+
