@@ -4,6 +4,7 @@ namespace Norvutec\CronManagerBundle\Service;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Norvutec\CronManagerBundle\Attribute\Cronjob;
+use Norvutec\CronManagerBundle\DependencyInjection\Configuration;
 use Norvutec\CronManagerBundle\Model\CronjobDefinition;
 use Norvutec\CronManagerBundle\Model\CronJobStatus;
 use Norvutec\CronManagerBundle\Model\Exception\CronjobNotFoundException;
@@ -30,9 +31,18 @@ class CronManagerService {
     /** @var array<string, true> */
     private array $registeredTags = [];
 
+    /**
+     * Held lock instances keyed by job tag. Must stay alive until releaseRunLock()
+     * (autoRelease=false); otherwise the destructor would free the claim immediately.
+     *
+     * @var array<string, SharedLockInterface>
+     */
+    private array $heldLocks = [];
+
     public function __construct(
         private readonly LockFactory $cronmanagerLockFactory,
-        private readonly CronJobHistoryRepository $historyRepository
+        private readonly CronJobHistoryRepository $historyRepository,
+        private readonly float $runLockTtl = Configuration::DEFAULT_RUN_LOCK_TTL,
     ) {
         $this->cronjobs = new ArrayCollection();
     }
@@ -145,39 +155,49 @@ class CronManagerService {
     }
 
     /**
-     * Locks the job for execution
+     * Locks the job for execution and keeps the Lock instance until {@see releaseRunLock()}.
      * @param CronjobDefinition $job Job to lock
      * @return bool was locked for this process
      */
     public function claimRunLock(CronjobDefinition $job): bool {
-        $jobLock = $this->getLock($job);
+        $tag = $job->getTag();
+        if (isset($this->heldLocks[$tag]) && $this->heldLocks[$tag]->isAcquired()) {
+            return true;
+        }
+
+        $jobLock = $this->cronmanagerLockFactory->createLock(
+            "cronmanager:job:{$tag}",
+            $this->runLockTtl,
+            false,
+        );
         if(!$jobLock->acquire()) {
             return false;
         }
         if(!$jobLock->isAcquired()) {
             return false;
         }
+
+        $this->heldLocks[$tag] = $jobLock;
+
         return true;
     }
 
     /**
-     * Releases the lock of the job
+     * Releases the previously claimed lock of the job.
      * @param CronjobDefinition $job Job to release
      * @return void
      */
     public function releaseRunLock(CronjobDefinition $job): void {
-        $this->getLock($job)->release();
-    }
+        $tag = $job->getTag();
+        $lock = $this->heldLocks[$tag] ?? null;
+        if ($lock === null) {
+            return;
+        }
 
-    /**
-     * Gets the lock object of the {@link LockFactory}
-     * @param CronjobDefinition $job Job to get the lock for
-     * @return SharedLockInterface The lock object
-     */
-    private function getLock(CronjobDefinition $job): SharedLockInterface {
-        return $this->cronmanagerLockFactory->createLock(
-            "cronmanager:job:{$job->getTag()}"
-        );
+        if ($lock->isAcquired()) {
+            $lock->release();
+        }
+        unset($this->heldLocks[$tag]);
     }
 
     /**

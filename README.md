@@ -49,6 +49,13 @@ You now have access to the following routes:
 * ``cronmanager_index`` : Overview of all jobs
 * ``cronmanager_details`` : Details of a specific job
 
+7. Optional: configure the job-lock TTL (default 300 seconds). The value should exceed the ``cron-manager:run`` process timeout (60s). On crash the lock expires after this TTL:
+```yaml
+# config/packages/norvutec_cron_manager.yaml
+norvutec_cron_manager:
+    run_lock_ttl: 300
+```
+
 Available commands
 ------------------
 
@@ -62,6 +69,10 @@ Show a list of all jobs. Job names are show with ```[x]``` if they are enabled a
 ```shell
 bin/console cron-manager:run [--force] [job]
 ```
+
+Each invocation claims at most one job via a Symfony Lock ``cronmanager:job:<tag>``.
+The lock is held until the run finishes (or the TTL expires after a crash), so parallel
+``cron-manager:run`` processes can safely pick different due jobs.
 
 Dependencies
 ------------------
