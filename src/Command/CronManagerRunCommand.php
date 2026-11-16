@@ -14,6 +14,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
@@ -42,6 +43,7 @@ class CronManagerRunCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $job = null;
+        $jobHistory = null;
         try {
             $forceJob = (bool) $input->getOption('force');
             if ($input->getArgument('job')) {
@@ -103,7 +105,21 @@ class CronManagerRunCommand extends Command
         } catch (UnableToForceLockJobException $e) {
             $output->writeln("<error>[ERROR] {$e->getMessage()}</error>");
             return Command::FAILURE;
+        } catch (ProcessTimedOutException $e) {
+            $output->writeln("<error>[ERROR] Cronjob process timed out</error>");
+            if ($jobHistory !== null) {
+                $jobHistory->addError($e->getMessage());
+                $exitCode = $e->getProcess()->getExitCode();
+                if ($exitCode === null) {
+                    $jobHistory->setStatus(CronJobStatus::FAILED);
+                }
+                $jobHistory->setExitCode($exitCode);
+                $jobHistory->setExitAt(new \DateTime());
+                $this->historyRepository->save($jobHistory, true);
+            }
+            return Command::FAILURE;
         } finally {
+            // Always free the held job lock (success, error, timeout, missing PHP binary).
             if ($job !== null) {
                 $this->service->releaseRunLock($job);
             }
